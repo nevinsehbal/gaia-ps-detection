@@ -18,18 +18,18 @@ Returns:
 dataset = customDataset.get_dataset(file_path="/Users/nevinsehbal/Documents/workspace/ps-paper-convlstm/gaia-ps-detection/afad_to_hdf5/afad_to_hdf5.hdf5", 
                                     seconds = 1500 , window_size=900, hopping_size=300, verbose=True)
 
-printCustom("info","First sample in the dataset:")
+# torch print options are set in order not to use scientific notation, and to show only 2 decimal points, and show 100 characters in a line
+torch.set_printoptions(sci_mode=False, precision=2, linewidth=100)
+printCustom("info","Some label examples in the dataset:")
 for i, (data, label) in enumerate(dataset):
-    printCustom("info","Data shape: " + str(data.shape))
-    printCustom("info","Label shape: "+ str(label.shape))
-    printCustom("info","Label: "+str(label))
-    if i == 0:
+    if i == 0 or i == 3 or i == 28 or i == 35:
+        printCustom("info","Label: "+str(label))
+    elif i == 36:
         break
-
 
 # Split the dataset into train, validation, and test sets
 # First, define sizes of the splits
-TRAIN_RATIO, VALIDATION_RATIO = 0.05, 0.05
+TRAIN_RATIO, VALIDATION_RATIO = 0.8, 0.1
 # check if the sum of the ratios is not more than 1, if it is, raise an exception
 assert TRAIN_RATIO + VALIDATION_RATIO <= 1, "The sum of the ratios should be less than or equal to 1"
 train_size = int(TRAIN_RATIO * len(dataset))

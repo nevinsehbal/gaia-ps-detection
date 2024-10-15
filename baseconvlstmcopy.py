@@ -3,7 +3,7 @@ import torch.nn as nn
 
 class ConvLSTMCell(nn.Module):
 
-    def __init__(self, input_dim, hidden_dim, kernel_size, bias, num_conv_layers=4):
+    def __init__(self, input_dim, hidden_dim, kernel_size, bias, num_conv_layers=2):
         """
         Initialize ConvLSTM cell with multiple convolutional layers.
         Parameters

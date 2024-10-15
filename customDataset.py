@@ -55,7 +55,7 @@ def applyWindowing(data, labels, window_size=900, hopping_size=300):
     windowed_labels = []
     for i in range(len(data)):
         sample = data[i] # sample is shape [3,1500]-->[channel, data points]
-        label = labels[i] # label is shape [4]-->[output]
+        label = labels[i] # label is shape [6]-->[output]
         if(type(label)!=torch.Tensor):
             printCustom("info","Label initial type:"+str(type(label)))
         # split the data into windows of window_size timesteps, with a hop of hopping_size timesteps
@@ -83,17 +83,23 @@ def applyWindowing(data, labels, window_size=900, hopping_size=300):
             # Check if S exists in the frame
             s_existence = 1 if s_idx >= start_idx and s_idx < end_idx else 0
             # Get the relative P index if P exists in that frame, otherwise set it to 0
-            p_index = p_idx - start_idx if p_existence else 0
+            p_index = p_idx - start_idx if p_existence else -1
             # Get the relative S index if S exists in that frame, otherwise set it to 0
-            s_index = s_idx - start_idx if s_existence else 0
-            if(global_indices == True and global_confidences == True):
-                new_labels.extend([p_idx, s_idx, p_confidence, s_confidence])
-            elif(global_indices == True and global_confidences == False):
-                new_labels.extend([p_idx, s_idx, p_existence, s_existence])
-            elif(global_indices == False and global_confidences == True):
-                new_labels.extend([p_index, s_index, p_confidence, s_confidence])
-            elif(global_indices == False and global_confidences == False):
-                new_labels.extend([p_index, s_index, p_existence, s_existence])
+            s_index = s_idx - start_idx if s_existence else -1
+
+            four_confidence_label = [(not p_existence and not s_existence), (p_existence and not s_existence), (not p_existence and s_existence), (p_existence and s_existence)]
+
+            # assume p_existence, s_existence = 00
+            # then four_confidence_label = [1&1, 0&1, 1&0, 0&0] = [1, 0, 0, 0]
+            # assume p_existence, s_existence = 10
+            # then four_confidence_label = [0&1, 1&1, 0&0, 1&0] = [0, 1, 0, 0]
+            # assume p_existence, s_existence = 01
+            # then four_confidence_label = [1&0, 0&0, 1&1, 0&1] = [0, 0, 1, 0]
+            # assume p_existence, s_existence = 11
+            # then four_confidence_label = [0&0, 1&0, 0&1, 1&1] = [0, 0, 0, 1]
+
+            if(global_indices == True and global_confidences == False):
+                new_labels.extend([p_idx, s_idx, four_confidence_label[0], four_confidence_label[1], four_confidence_label[2], four_confidence_label[3]])
             windowed_labels.append(new_labels)
     return torch.stack(windowed_data), torch.tensor(windowed_labels).float()
     
@@ -121,11 +127,10 @@ def get_dataset(file_path, seconds, window_size, hopping_size, verbose=False):
         printCustom("info","Each sample is window_size/sample rate seconds long. Each sample has 3 channels.")
         printCustom("info","Dataset values shape is: [num_samples, num_window, num_channel, (height) 1, (width) num_sample_points]")
         printCustom("info","Dataset value shape: "+str(windowed_data.shape))
-        printCustom("info","Dataset labels shape is: [num_samples, 4], where the 4 values are [p_idx, s_idx, p_confidence, s_confidence]")
+        printCustom("info","Dataset labels shape is: [num_samples, 4], where the 4 values are [p_idx, s_idx, no_PS, only_P, only_S, both_PS]")
         printCustom("info","Dataset label shape:"+str(windowed_labels.shape))
         printCustom("info","One sample shape: "+str(windowed_data[0].shape))
         printCustom("info","One label shape: "+str(windowed_labels[0].shape))
-        printCustom("info","An example sample's label: "+str(windowed_labels[12]))
         printCustom("info","----------------------------------------------------")
     # Create dataset
     dataset = SeismicDataset(windowed_data, windowed_labels, verbose=True)

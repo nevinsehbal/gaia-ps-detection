@@ -35,7 +35,7 @@ class ConvLSTMCell(nn.Module):
                               out_channels=4 * self.hidden_dim, # i gate, f gate, o gate, g gate are calculated together, and then split
                               kernel_size=self.kernel_size,
                               padding=self.padding,
-                              bias=self.bias)
+                              bias=self.bias,)
     
     def forward(self, input_tensor, cur_state):
         h_cur, c_cur = cur_state # Each timestamp contains two state tensors: h and c
@@ -127,10 +127,45 @@ class ConvLSTM(nn.Module):
             # else:
             # cur_input_dim = self.hidden_dim[i - 1]
             cur_input_dim = self.input_dim if i == 0 else self.hidden_dim[i - 1] # Equivalent to above
-            cell_list.append(ConvLSTMCell(input_dim=cur_input_dim,
-                                          hidden_dim=self.hidden_dim[i],
-                                          kernel_size=self.kernel_size[i],
-                                          bias=self.bias))
+            if i == 0:
+                print("Layer 1")
+                cell_list.append(ConvLSTMCell(input_dim=cur_input_dim,
+                                              hidden_dim=self.hidden_dim[i],
+                                              kernel_size=(11,1),
+                                              bias=self.bias))
+            elif i == 1:
+                print("Layer 2")
+                cell_list.append(ConvLSTMCell(input_dim=cur_input_dim,
+                                              hidden_dim=self.hidden_dim[i],
+                                              kernel_size=(5,1),
+                                              bias=self.bias))
+            elif i == 2:
+                print("Layer 3")
+                cell_list.append(ConvLSTMCell(input_dim=cur_input_dim,
+                                              hidden_dim=self.hidden_dim[i],
+                                              kernel_size=(3,1),
+                                              bias=self.bias))
+            elif i == 3:
+                print("Layer 4")
+                cell_list.append(ConvLSTMCell(input_dim=cur_input_dim,
+                                              hidden_dim=self.hidden_dim[i],
+                                              kernel_size=(3,1),
+                                              bias=self.bias))
+            elif i == 4:
+                print("Layer 5")
+                cell_list.append(ConvLSTMCell(input_dim=cur_input_dim,
+                                              hidden_dim=self.hidden_dim[i],
+                                              kernel_size=(3,1),
+                                              bias=self.bias))
+            else:
+                print("Error: Number of layers must be equal to 5")
+
+
+
+            # cell_list.append(ConvLSTMCell(input_dim=cur_input_dim,
+            #                               hidden_dim=self.hidden_dim[i],
+            #                               kernel_size=self.kernel_size[i],
+            #                               bias=self.bias))
  
         self.cell_list = nn.ModuleList(cell_list) # Connect multiple LSTM layers into a network model
     

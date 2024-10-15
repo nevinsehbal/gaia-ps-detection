@@ -6,6 +6,7 @@ class CustomLoss(nn.Module):
     def __init__(self, lambda_val):
         super(CustomLoss, self).__init__()
         self.lambda_val = lambda_val
+        self.loss_e_lambda = 1
 
     def forward(self, outputs, labels):
         # We expect the outputs to be a tensor of shape (batch_size, 5)
@@ -39,23 +40,23 @@ class CustomLoss(nn.Module):
 
         # if there is no P/S in the ground truth, only use loss_e for total_loss
         if no_ps_mask.any():
-            total_loss[no_ps_mask] = loss_e[no_ps_mask]
+            total_loss[no_ps_mask] = self.loss_e_lambda*loss_e[no_ps_mask]
 
         # if there is only P in the ground truth, additionally calculate loss_p
-        elif only_p_mask.any():
+        if only_p_mask.any():
             loss_p = ((p_ground - p_predict) ** 2)
-            total_loss[only_p_mask] = self.lambda_val * loss_p[only_p_mask] + loss_e[only_p_mask]
+            total_loss[only_p_mask] = self.lambda_val * loss_p[only_p_mask] + self.loss_e_lambda*loss_e[only_p_mask]
 
         # if there is only S in the ground truth, additionally calculate loss_s
-        elif only_s_mask.any():
+        if only_s_mask.any():
             loss_s = ((s_ground - s_predict) ** 2)
-            total_loss[only_s_mask] = self.lambda_val * loss_s[only_s_mask] + loss_e[only_s_mask]
+            total_loss[only_s_mask] = self.lambda_val * loss_s[only_s_mask] + self.loss_e_lambda*loss_e[only_s_mask]
 
         # if there are P/S in the ground truth, use lambda * (loss_p + loss_s) + loss_e        
-        elif both_ps_mask.any():
+        if both_ps_mask.any():
             loss_p = ((p_ground - p_predict) ** 2)
             loss_s = ((s_ground - s_predict) ** 2)
-            total_loss[both_ps_mask] = self.lambda_val * (loss_p[both_ps_mask] + loss_s[both_ps_mask]) + loss_e[both_ps_mask]
+            total_loss[both_ps_mask] = self.lambda_val * (loss_p[both_ps_mask] + loss_s[both_ps_mask]) + self.loss_e_lambda*loss_e[both_ps_mask]
 
         return total_loss.mean()  # Return the average loss
         
