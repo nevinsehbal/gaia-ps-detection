@@ -15,7 +15,22 @@ Parameters:
 Returns:
     dataset (SeismicDataset): seismic dataset
 """
-dataset = customDataset.get_dataset(file_path="/Users/nevinsehbal/Documents/workspace/ps-paper-convlstm/gaia-ps-detection/afad_to_hdf5/afad_to_hdf5.hdf5", 
+
+# if dataset is not downloaded, download dataset
+import os
+current_path = os.getcwd()
+printCustom("info", "Checking if the dataset is downloaded with the name afad_hfd5.zip")
+if(not os.path.exists(current_path+"/afad_hdf5.zip")):
+    printCustom("warning", "Dataset is not found, downloading the dataset")
+    # share link is: https://drive.google.com/file/d/1isvI3lELKocPuF2mIjMiMpXrcaoWTaIQ/view?usp=sharing file_id = '1isvI3lELKocPuF2mIjMiMpXrcaoWTaIQ' 
+    import gdown
+    file_id = '1isvI3lELKocPuF2mIjMiMpXrcaoWTaIQ'# file id is the /d/ part in the share link
+    output = 'afad_hdf5.zip'
+    gdown.download(f'https://drive.google.com/uc?id={file_id}',output,quiet=False)
+
+printCustom('success','Dataset is downloaded, loading the dataset')
+
+dataset = customDataset.get_dataset(file_path=current_path+"/afad_hdf5.zip", 
                                     seconds = 1500 , window_size=900, hopping_size=300, verbose=True)
 
 # torch print options are set in order not to use scientific notation, and to show only 2 decimal points, and show 100 characters in a line

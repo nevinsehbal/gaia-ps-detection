@@ -164,5 +164,8 @@ cython_debug/
 models/*
 output/*
 afad_to_hdf5/*
+afad_hdf5.zip
+
+gaia-venv/*
 
 .DS_Store
