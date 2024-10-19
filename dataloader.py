@@ -38,7 +38,7 @@ test_size = len(dataset) - train_size - val_size
 # Set the seed for reproducibility
 torch.manual_seed(0)
 # Then, create train, validation and test dataloaders
-TRAIN_BATCH_SIZE = 16
+TRAIN_BATCH_SIZE = 32
 TEST_BATCH_SIZE = 1
 
 train_dataset, val_dataset, test_dataset = torch.utils.data.random_split(dataset, [train_size, val_size, test_size])

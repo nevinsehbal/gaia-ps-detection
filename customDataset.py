@@ -19,6 +19,12 @@ class SeismicDataset(Dataset):
         label = self.labels[idx]
         return sample, label.clone().detach()
     
+def zero_center_normalize(data):
+    # Zero-center each channel separately
+    mean = data.mean(axis=-1, keepdims=True)  # Compute mean for each channel over the time axis
+    normalized_data = data - mean  # Subtract mean to zero-center
+    return normalized_data
+    
 def read_hdf5(file_path, seconds):
     samples_dict = {'sample':[], 'label':[]}
     sampling_rate = 100
@@ -27,6 +33,8 @@ def read_hdf5(file_path, seconds):
         for key in dataset_group.keys():
             dataset = dataset_group[key]
             data = dataset[:]
+            # Apply zero-center normalization to the time series data
+            data = zero_center_normalize(data)
             if(len(data[0]) != seconds):
                 continue
             samples_dict['sample'].append(data)

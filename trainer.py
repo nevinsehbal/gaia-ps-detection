@@ -30,7 +30,7 @@ def train_model(model, train_dataloader, val_dataloader, criterion, optimizer, n
     return model, train_losses, val_losses
 
 # a new train model function that also writes the predicted and ground truth values to a file
-def train_model_with_logging(model, train_dataloader, val_dataloader, criterion, optimizer, num_epochs, log_file_p):
+def train_model_with_logging(model, train_dataloader, val_dataloader, criterion, optimizer, num_epochs, log_file_p, early_stopping=False):
     train_losses = []
     val_losses = []
     model.train()
@@ -58,6 +58,10 @@ def train_model_with_logging(model, train_dataloader, val_dataloader, criterion,
         train_losses.append(epoch_loss)
         # Validate the model
         val_losses.append(validate_model(model, val_dataloader, criterion))
+        if(early_stopping):
+            # if the train loss is not decreasing for 3 epochs, stop the training
+            if epoch > 3 and train_losses[-1] > train_losses[-2] > train_losses[-3]:
+                print("Early stopping activated")
     print('Training complete')
     return model, train_losses, val_losses
 
