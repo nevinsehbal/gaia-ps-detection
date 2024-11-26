@@ -1,8 +1,16 @@
+import sys
+import os
+# Add the src_dataset directory to the sys.path
+sys.path.append(os.path.abspath(os.path.join(os.getcwd(), '../src_dataset/')))
+sys.path.append(os.path.abspath(os.path.join(os.getcwd(), '../utils/')))
+sys.path.append(os.path.abspath(os.path.join(os.getcwd(), '../src_models/')))
+sys.path.append(os.path.abspath(os.path.join(os.getcwd(), '../src_loss/')))
+
 import h5py
 import torch
 from torch.utils.data import Dataset, DataLoader
 import numpy as np
-from logUtils import printCustom
+from utils.logUtils import printCustom
 
 # Custom dataset class
 class SeismicDataset(Dataset):
