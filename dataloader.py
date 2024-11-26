@@ -1,8 +1,16 @@
-import customDataset
+import sys
+import os
+# Add the src_dataset directory to the sys.path
+sys.path.append(os.path.abspath(os.path.join(os.getcwd(), '../src_dataset/')))
+sys.path.append(os.path.abspath(os.path.join(os.getcwd(), '../utils/')))
+sys.path.append(os.path.abspath(os.path.join(os.getcwd(), '../src_model/')))
+sys.path.append(os.path.abspath(os.path.join(os.getcwd(), '../src_loss/')))
+
+import customDataset as customDataset
 from torch.utils.data import DataLoader
 import torch
 import matplotlib.pyplot as plt
-from logUtils import printCustom
+from utils.logUtils import printCustom
 
 """
 Load the dataset from the hdf5 file
@@ -19,18 +27,21 @@ Returns:
 # if dataset is not downloaded, download dataset
 import os
 current_path = os.getcwd()
+# go to the parent directory and add the dataset path
+current_path = os.path.join(os.path.abspath(os.path.join(current_path, os.pardir)),"src_dataset")
+
 printCustom("info", "Checking if the dataset is downloaded with the name afad_hfd5.zip")
-if(not os.path.exists(current_path+"/afad_hdf5.zip")):
+if(not os.path.exists(current_path+"/afad_hdf5.hdf5")):
     printCustom("warning", "Dataset is not found, downloading the dataset")
     # share link is: https://drive.google.com/file/d/1isvI3lELKocPuF2mIjMiMpXrcaoWTaIQ/view?usp=sharing file_id = '1isvI3lELKocPuF2mIjMiMpXrcaoWTaIQ' 
     import gdown
     file_id = '1isvI3lELKocPuF2mIjMiMpXrcaoWTaIQ'# file id is the /d/ part in the share link
-    output = 'afad_hdf5.zip'
-    gdown.download(f'https://drive.google.com/uc?id={file_id}',output,quiet=False)
+    output = 'afad_hdf5.hdf5'
+    gdown.download(f'https://drive.google.com/uc?id={file_id}',current_path+"/"+output,quiet=False)
 
 printCustom('success','Dataset is downloaded, loading the dataset')
 
-dataset = customDataset.get_dataset(file_path=current_path+"/afad_hdf5.zip", 
+dataset = customDataset.get_dataset(file_path=current_path+"/afad_hdf5.hdf5", 
                                     seconds = 1500 , window_size=900, hopping_size=300, verbose=True)
 
 # torch print options are set in order not to use scientific notation, and to show only 2 decimal points, and show 100 characters in a line
