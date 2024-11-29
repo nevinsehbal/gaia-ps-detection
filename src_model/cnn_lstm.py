@@ -64,42 +64,62 @@ class CNN_LSTM(nn.Module):
 
         # Output layers
         self.time_regression = nn.Linear(hidden_size, 2)  # P and S time regression
-        self.wave_existence = nn.Linear(hidden_size, 2)   # P and S existence classification
+        self.wave_existence = nn.Linear(hidden_size, 4)   # Multiclass classification for wave existence (no_PS, only_P, only_S, both_PS)
 
-    def forward(self, x):
-        # Expected input shape: [batch_size, num_windows, channels, 1, window_size]
+    def forward(self, x, verbose=False):
+        """
+        Forward pass for CNN-LSTM.
+        Args:
+            x: Tensor of shape [batch_size, num_windows, channels, 1, window_size]
+            verbose: Whether to print intermediate shapes for debugging.
+        """
         batch_size, num_windows, channels, _, window_size = x.size()
-        print(f"Initial input shape: {x.shape}")  # Print input shape
 
-        # Reshape for CNN input as [batch_size * num_windows, channels, window_size] ?? where to put num_windowss???
-        x = x.view(batch_size, channels, num_windows).to(device)
-        print(f"Shape after reshaping for CNN: {x.shape}")  # Print reshaped input
+        if verbose:
+            print(f"Initial input shape: {x.shape}")
+
+        # Reshape for CNN: [batch_size * num_windows, channels, window_size]
+        x = x.view(batch_size*num_windows, channels,window_size).to(device)
+        if verbose:
+            print(f"Shape after reshaping for CNN: {x.shape}")
 
         # Pass through CNN layers
-        x = self.encoder(x)  # Shape should now be [batch_size * num_windows, cnn_output_channels, cnn_output_length]
-        print(f"Shape after CNN: {x.shape}")  # Print shape after CNN layers
+        x = self.encoder(x)  # Shape: [batch_size * num_windows, cnn_output_channels, cnn_output_length]
+        if verbose:
+            print(f"Shape after CNN: {x.shape}")
 
-        # Reshape for LSTM input as [batch_size, num_windows, cnn_output_channels * cnn_output_length]
-        x = x.view(batch_size, num_windows, -1)
-        print(f"Shape after reshaping for LSTM: {x.shape}")  # Print reshaped input for LSTM
+        cnn_output_channels = x.size(1)  # Number of channels
+        cnn_output_length = x.size(2)  # Length of the feature map
+        flattened_size = cnn_output_channels * cnn_output_length
 
-        # Pass through the LSTM
-        x, (hn, cn) = self.lstm(x)
-        print(f"Shape after LSTM output: {x.shape}")  # Print LSTM output shape
-        print(f"Shape of final hidden state (hn): {hn.shape}")  # Print shape of LSTM hidden state
+        # Reshape for LSTM
+        x = x.view(batch_size, num_windows, flattened_size)
 
-        x = hn[-1]
-        print(f"Shape of the last LSTM hidden state (x): {x.shape}")  # Print shape of last LSTM hidden state
+        if verbose:
+            print(f"Shape after reshaping for LSTM: {x.shape}")
+
+        # Pass through LSTM
+        x, (hn, cn) = self.lstm(x)  # hn: [num_layers, batch_size, hidden_size]
+        if verbose:
+            print(f"Shape after LSTM output: {x.shape}")
+            print(f"Shape of final hidden state (hn): {hn.shape}")
+
+        # Use the final hidden state of the last LSTM layer
+        x = hn[-1]  # Shape: [batch_size, hidden_size]
+        if verbose:
+            print(f"Shape of the last LSTM hidden state: {x.shape}")
 
         # Output layers
-        times = self.time_regression(x)
-        print(f"Shape after time regression: {times.shape}")  # Print shape of time regression output
+        times = self.time_regression(x)  # Regression output (p_idx, s_idx)
+        existence = self.wave_existence(x)  # Classification output (no_PS, only_P, only_S, both_PS)
 
-        existence = self.wave_existence(x)
-        existence = torch.sigmoid(existence)
-        print(f"Shape after wave existence and sigmoid: {existence.shape}")  # Print shape of wave existence output
+        if verbose:
+            print(f"Shape after time regression: {times.shape}")
+            print(f"Shape after wave existence: {existence.shape}")
 
-        # Concatenate outputs
+        # Concatenate outputs: [batch_size, 6]
         output = torch.cat((times, existence), dim=1)
-        print(f"Final output shape: {output.shape}")  # Print final output shape
+        if verbose:
+            print(f"Final output shape: {output.shape}")
+
         return output
